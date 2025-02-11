@@ -1,54 +1,85 @@
 const { chromium } = require("playwright");
+const fs = require("fs");
 
-(async () => {
-  const browser = await chromium.launch();
 
+const main = async () => {
+  const browser = await chromium.launch({ headless: false });
   const context = await browser.newContext();
-
   const page = await context.newPage();
 
-  await page.goto("https://www.laborum.pe/");
+  const url = "https://www.laborum.pe/job/BCP---Otras-posiciones/Practicante-Pre-Profesional/67a6138fb3e5207fb22e0d56";
 
-  await page.fill(
-    'input[aria-label="Busca un puesto, área o empresa"]',
-    "backend"
-  );
+  //  *Go to web
+  await page.goto(url);
 
-  await page.click('button[aria-label="buscar trabajo"]');
+  // *Search
+  // await page.fill(
+  //   'input[aria-label="Busca un puesto, área o empresa"]',
+  //   "backend"
+  // );
+  // await page.click('button[aria-label="buscar trabajo"]');
 
+  // *Wait for the items to load
   await page.waitForSelector("#listJobs");
 
-  const data = await page.evaluate(async () => {
-    const items = document.querySelectorAll("#listJobs>div>div>li");
+  // *Get items
+  const items = await page.$$("#listJobs > div > div > li a");
 
-    const data = [];
+  const data = [];
 
-    for (const item of items) {
-      const title = item.querySelector("h6").textContent;
+  for (const item of items) {
 
-      const enterprise = item.querySelector("h6").nextSibling.textContent;
-      const location = item
-        .querySelector("a>div>div")
-        .nextElementSibling.querySelector("ul>li>span").textContent;
+    // *Title
+    const titleElement = await item.$("h6");
+    const title = titleElement && await titleElement.textContent();
 
-      const publishedAt = item
-        .querySelector("a>div>div")
-        .nextElementSibling.querySelector("p").textContent;
+    // *Enterprise
+    const enterpriseElement = await item.$("h6 + p");
+    const enterprise = enterpriseElement && await enterpriseElement.textContent();
 
-      const pageUrl = item.querySelector("a").href;
+    // *Location
+    const [locationElement] = await item.$$("ul > li");
+    const location = locationElement && await locationElement.textContent();
 
-      await page.goto(pageUrl);
+    // *PublishedAt
+    const publishedAtElement = await item.$("ul + p");
+    const publishedAt = publishedAtElement && await publishedAtElement.textContent();
 
-      data.push({
-        title,
-        enterprise,
-        location,
-        publishedAt,
-      });
-    }
+    // *Description
+    await item.click();
+    await page.waitForSelector("h4 + div");
 
-    return data;
-  });
+    const descriptionElement = await page.$("h4 + div");
+    const description = descriptionElement && await descriptionElement.textContent();
 
-  console.log(data);
-})();
+    data.push({
+      title,
+      enterprise,
+      location,
+      publishedAt,
+      description
+    });
+
+  }
+
+  // *Save file
+  saveFile(data);
+
+
+  await page.close();
+  await context.close();
+  await browser.close();
+}
+
+
+const saveFile = (items) => {
+  try {
+    fs.writeFileSync("./data.json", JSON.stringify(items, null, 3));
+  } catch (error) {
+    throw Error(error);
+  }
+}
+
+(async () => {
+  await main();
+})()
