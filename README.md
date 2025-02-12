@@ -11,14 +11,14 @@
 * Instalar las dependencias de node
   
   ```bash
-    npm install
+  npm install
   ```
-
-* Ejecutar el script
-
-   ```bash
-      node index
-   ```
 
 > [!NOTE]
 > Observar la versión de node en el archivo `.nvmrc`
+
+* Ejecutar el script
+
+  ```bash
+  node index
+  ```
