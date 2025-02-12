@@ -14,13 +14,6 @@ const main = async () => {
   //  *Go to web
   await page.goto(url);
 
-  // *Search
-  // await page.fill(
-  //   'input[aria-label="Busca un puesto, área o empresa"]',
-  //   "backend"
-  // );
-  // await page.click('button[aria-label="buscar trabajo"]');
-
   // *Wait for the items to load
   await page.waitForSelector("#listJobs");
 
